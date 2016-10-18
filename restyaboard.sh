@@ -6,6 +6,26 @@
 #
 # Copyright (c) 2014-2016 Restya.
 # Dual License (OSL 3.0 & Commercial License)
+get_geoip_data () {
+	wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
+	gunzip GeoIP.dat.gz
+	mv GeoIP.dat /usr/share/GeoIP/GeoIP.dat
+	wget http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz
+	gunzip GeoIPv6.dat.gz
+	mv GeoIPv6.dat /usr/share/GeoIP/GeoIPv6.dat
+	wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+	gunzip GeoLiteCity.dat.gz
+	mv GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat
+	wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz
+	gunzip GeoLiteCityv6.dat.gz
+	mv GeoLiteCityv6.dat /usr/share/GeoIP/GeoLiteCityv6.dat
+	wget http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz
+	gunzip GeoIPASNum.dat.gz
+	mv GeoIPASNum.dat /usr/share/GeoIP/GeoIPASNum.dat
+	wget http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNumv6.dat.gz
+	gunzip GeoIPASNumv6.dat.gz
+	mv GeoIPASNumv6.dat /usr/share/GeoIP/GeoIPASNumv6.dat
+}
 {
 	if [[ $EUID -ne 0 ]];
 	then
@@ -114,24 +134,8 @@
 				then
 					echo "GeoIP folder creation failed with error code 52"
 				fi
-				wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
-				gunzip GeoIP.dat.gz
-				mv GeoIP.dat /usr/share/GeoIP/GeoIP.dat
-				wget http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz
-				gunzip GeoIPv6.dat.gz
-				mv GeoIPv6.dat /usr/share/GeoIP/GeoIPv6.dat
-				wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
-				gunzip GeoLiteCity.dat.gz
-				mv GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat
-				wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz
-				gunzip GeoLiteCityv6.dat.gz
-				mv GeoLiteCityv6.dat /usr/share/GeoIP/GeoLiteCityv6.dat
-				wget http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz
-				gunzip GeoIPASNum.dat.gz
-				mv GeoIPASNum.dat /usr/share/GeoIP/GeoIPASNum.dat
-				wget http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNumv6.dat.gz
-				gunzip GeoIPASNumv6.dat.gz
-				mv GeoIPASNumv6.dat /usr/share/GeoIP/GeoIPASNumv6.dat
+
+				get_geoip_data
 
 				service php5-fpm restart
 				
@@ -248,24 +252,8 @@
 				then
 					echo "GeoIP folder creation failed with error code 48"
 				fi
-				wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
-				gunzip GeoIP.dat.gz
-				mv GeoIP.dat /usr/share/GeoIP/GeoIP.dat
-				wget http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz
-				gunzip GeoIPv6.dat.gz
-				mv GeoIPv6.dat /usr/share/GeoIP/GeoIPv6.dat
-				wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
-				gunzip GeoLiteCity.dat.gz
-				mv GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat
-				wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz
-				gunzip GeoLiteCityv6.dat.gz
-				mv GeoLiteCityv6.dat /usr/share/GeoIP/GeoLiteCityv6.dat
-				wget http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz
-				gunzip GeoIPASNum.dat.gz
-				mv GeoIPASNum.dat /usr/share/GeoIP/GeoIPASNum.dat
-				wget http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNumv6.dat.gz
-				gunzip GeoIPASNumv6.dat.gz
-				mv GeoIPASNumv6.dat /usr/share/GeoIP/GeoIPASNumv6.dat
+
+				get_geoip_data
 
 				ps -q 1 | grep -q -c "systemd"
 				if [ "$?" -eq 0 ];
@@ -366,7 +354,7 @@
 			
 			echo "Updating SQL..."
 			psql -d ${POSTGRES_DBNAME} -f "$dir/sql/${RESTYABOARD_VERSION}.sql" -U ${POSTGRES_DBUSER}
-			/bin/echo "$RESTYABOARD_VERSION" > /opt/restyaboard/release
+			/bin/echo "$RESTYABOARD_VERSION" > ${DOWNLOAD_DIR}/release
 			if [ $? != 0 ]
 			then
 				echo "PostgreSQL updation of SQL failed with error code 33"
@@ -379,7 +367,7 @@
 	
 	if [ -d "$DOWNLOAD_DIR" ];
 	then
-		version=$(cat /opt/restyaboard/release)
+		version=$(cat ${DOWNLOAD_DIR}/release)
 		if [[ $version < $RESTYABOARD_VERSION ]];
 		then
 			update_version
@@ -551,7 +539,7 @@
 			php -m | grep imap
 			if [ "$?" -gt 0 ]; then
 				echo "Installing php5-imap..."
-				apt-get install -y php5-imap
+				apt-get install -y php5-imap="5.4.6-0ubuntu5"
 				if [ $? != 0 ]
 				then
 					echo "php5-imap installation failed with error code 11"
@@ -580,7 +568,6 @@
 					if [ $? != 0 ]
 					then
 						echo "ca-certificates installation failed with error code 12"
-						exit 1
 					fi
 					wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc
 					apt-key add ACCC4CF8.asc
@@ -597,6 +584,23 @@
 					mv pg_hba.conf.1 pg_hba.conf
 					service postgresql restart
 				esac
+			else
+				PSQL_VERSION=$(psql --version | egrep -o '[0-9]{1,}\.[0-9]{1,}')
+				if [[ $PSQL_VERSION < 9.3 ]]; then
+					set +x
+					echo "Restyaboard will not work in your PostgreSQL version (i.e. less than 9.3). So script going to update PostgreSQL version 9.4"
+					sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+					apt-get install wget ca-certificates
+					if [ $? != 0 ]
+					then
+						echo "ca-certificates installation failed with error code 12"
+					fi
+					wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc
+					apt-key add ACCC4CF8.asc
+					apt-get update
+					apt-get upgrade
+					apt-get install -y postgresql-9.4
+				fi
 			fi
 			
 			echo "Checking ElasticSearch..."
@@ -627,10 +631,10 @@
 			fi
 
 			echo "Downloading Restyaboard script..."
-			mkdir /opt/restyaboard
+			mkdir ${DOWNLOAD_DIR}
 			curl -v -L -G -d "app=board&ver=${RESTYABOARD_VERSION}" -o /tmp/restyaboard.zip http://restya.com/download.php
-			unzip /tmp/restyaboard.zip -d /opt/restyaboard
-			cp /opt/restyaboard/restyaboard.conf /etc/nginx/conf.d
+			unzip /tmp/restyaboard.zip -d ${DOWNLOAD_DIR}
+			cp ${DOWNLOAD_DIR}/restyaboard.conf /etc/nginx/conf.d
 			rm /tmp/restyaboard.zip
 			
 			set +x
@@ -659,7 +663,7 @@
 			echo "Changing root directory in nginx configuration..."
 			sed -i "s|root.*html|root $dir|" /etc/nginx/conf.d/restyaboard.conf
 			echo "Copying Restyaboard script to root directory..."
-			cp -r /opt/restyaboard/* "$dir"
+			cp -r ${DOWNLOAD_DIR}/* "$dir"
 			
 			echo "Installing postfix..."
 			echo "postfix postfix/mailname string $webdir"\
@@ -792,24 +796,8 @@
 			then
 				echo "GeoIP folder creation failed with error code 52"
 			fi
-			wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
-			gunzip GeoIP.dat.gz
-			mv GeoIP.dat /usr/share/GeoIP/GeoIP.dat
-			wget http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz
-			gunzip GeoIPv6.dat.gz
-			mv GeoIPv6.dat /usr/share/GeoIP/GeoIPv6.dat
-			wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
-			gunzip GeoLiteCity.dat.gz
-			mv GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat
-			wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz
-			gunzip GeoLiteCityv6.dat.gz
-			mv GeoLiteCityv6.dat /usr/share/GeoIP/GeoLiteCityv6.dat
-			wget http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz
-			gunzip GeoIPASNum.dat.gz
-			mv GeoIPASNum.dat /usr/share/GeoIP/GeoIPASNum.dat
-			wget http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNumv6.dat.gz
-			gunzip GeoIPASNumv6.dat.gz
-			mv GeoIPASNumv6.dat /usr/share/GeoIP/GeoIPASNumv6.dat
+
+			get_geoip_data
 			
 			service php5-fpm restart
 			
@@ -1125,6 +1113,57 @@
 						/etc/init.d/postgresql-9.4 restart
 					fi
 				esac
+			else 
+				PSQL_VERSION=$(psql --version | egrep -o '[0-9]{1,}\.[0-9]{1,}')
+				if [[ $PSQL_VERSION < 9.3 ]]; then
+					set +x
+					echo "Restyaboard will not work in your PostgreSQL version (i.e. less than 9.3). So script going to update PostgreSQL version 9.4"
+					if [ $(getconf LONG_BIT) = "32" ]; then
+						yum install -y http://yum.postgresql.org/9.4/redhat/rhel-6.6-i386/pgdg-centos94-9.4-1.noarch.rpm
+						if [ $? != 0 ]
+						then
+							echo "Installing PostgreSQL 32 fail with error code 27"
+						fi
+					fi
+					if [ $(getconf LONG_BIT) = "64" ]; then
+						yum install -y http://yum.postgresql.org/9.4/redhat/rhel-6.6-x86_64/pgdg-centos94-9.4-1.noarch.rpm
+						if [ $? != 0 ]
+						then
+							echo "Installing PostgreSQL 64 fail with error code 28"
+						fi
+					fi
+
+					yum install -y postgresql94-server postgresql94-contrib
+					if [ $? != 0 ]
+					then
+						echo "postgresql04-contrib installation failed with error code 29"
+					fi
+					
+					ps -q 1 | grep -q -c "systemd"
+					if [ "$?" -eq 0 ]; then
+						if [ -f /usr/pgsql-9.4/bin/postgresql94-setup ]; then
+							/usr/pgsql-9.4/bin/postgresql94-setup initdb
+						fi
+						systemctl start postgresql-9.4.service
+						systemctl enable postgresql-9.4.service
+					else
+						service postgresql-9.4 initdb
+						/etc/init.d/postgresql-9.4 start
+						chkconfig --levels 35 postgresql-9.4 on
+					fi
+
+					sed -e 's/peer/trust/g' -e 's/ident/trust/g' < /var/lib/pgsql/9.4/data/pg_hba.conf > /var/lib/pgsql/9.4/data/pg_hba.conf.1
+					cd /var/lib/pgsql/9.4/data || exit
+					mv pg_hba.conf pg_hba.conf_old
+					mv pg_hba.conf.1 pg_hba.conf
+					
+					ps -q 1 | grep -q -c "systemd"
+					if [ "$?" -eq 0 ]; then
+						systemctl restart postgresql-9.4.service
+					else
+						/etc/init.d/postgresql-9.4 restart
+					fi
+				fi
 			fi
 
 			echo "Checking ElasticSearch..."
@@ -1327,24 +1366,8 @@
 			then
 				echo "GeoIP folder creation failed with error code 48"
 			fi
-			wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
-			gunzip GeoIP.dat.gz
-			mv GeoIP.dat /usr/share/GeoIP/GeoIP.dat
-			wget http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz
-			gunzip GeoIPv6.dat.gz
-			mv GeoIPv6.dat /usr/share/GeoIP/GeoIPv6.dat
-			wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
-			gunzip GeoLiteCity.dat.gz
-			mv GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat
-			wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz
-			gunzip GeoLiteCityv6.dat.gz
-			mv GeoLiteCityv6.dat /usr/share/GeoIP/GeoLiteCityv6.dat
-			wget http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNum.dat.gz
-			gunzip GeoIPASNum.dat.gz
-			mv GeoIPASNum.dat /usr/share/GeoIP/GeoIPASNum.dat
-			wget http://download.maxmind.com/download/geoip/database/asnum/GeoIPASNumv6.dat.gz
-			gunzip GeoIPASNumv6.dat.gz
-			mv GeoIPASNumv6.dat /usr/share/GeoIP/GeoIPASNumv6.dat
+
+			get_geoip_data
 			
 			ps -q 1 | grep -q -c "systemd"
 			if [ "$?" -eq 0 ];
@@ -1424,7 +1447,7 @@
 				/etc/init.d/nginx restart
 			fi
 			
-			/bin/echo "$RESTYABOARD_VERSION" > /opt/restyaboard/release
+			/bin/echo "$RESTYABOARD_VERSION" > ${DOWNLOAD_DIR}/release
 		esac
 	fi
 	set +x
